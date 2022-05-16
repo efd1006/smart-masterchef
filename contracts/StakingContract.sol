@@ -12,6 +12,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./interfaces/Balancer.sol";
+import "./interfaces/BalancerGauge.sol";
 
 struct ContractInfo {
   address contractCreator;
@@ -62,7 +63,8 @@ contract StakingContract is
     uint256 _withdrawalFee,
     uint256 _performanceFee,
     bytes32 _poolId,
-    address _BPSP
+    address _BPSP,
+    address _balancerGauge
   ) {
     contractInfo.contractCreator = msg.sender;
     contractInfo.admin = msg.sender;
@@ -72,6 +74,7 @@ contract StakingContract is
 
     balancerInfo.poolId = _poolId;
     balancerInfo.BPSP = _BPSP;
+    balancerInfo.balancerGauge = _balancerGauge;
     balancerInfo.assets = [
       IAsset(USDC),
       IAsset(DAI),
@@ -161,13 +164,40 @@ contract StakingContract is
     //approve balancer to take BPSP
     IERC20Upgradeable(balancerInfo.BPSP).approve(BALANCER, MAX_INT);
 
+    // approve balancer gauge to take BPSP
+    IERC20Upgradeable(balancerInfo.BPSP).approve(balancerInfo.balancerGauge, MAX_INT);
+
   }
 
   function setAllowanceApproval() public onlyAdmin {
     approveAllowanceForBalancerInternally();
   }
 
-  
+  function joinDAIPoolInternal(uint256 _amount) internal {
+    // mapping of IAssets[] from balancerInfo.assets
+    uint256[] memory amountsIn = new uint256[](4);
+    amountsIn[1] = _amount; // dai 
+
+    bytes memory userDataEncoded = abi.encode(1, amountsIn, 0);
+
+    JoinPoolRequest memory request;
+    request.assets = balancerInfo.assets;
+    request.maxAmountsIn = amountsIn;
+    request.userData = userDataEncoded;
+    request.fromInternalBalance = false;
+
+    // join pool, this will give us receipt token (BPSP)
+    Balancer(BALANCER).joinPool(balancerInfo.poolId, address(this), address(this), request);
+
+    // once we got the BPSP token, stake BPSP token on balancer gauge
+    uint256 bpspBalance = IERC20Upgradeable(balancerInfo.BPSP).balanceOf(address(this));
+    BalancerGauge(balancerInfo.balancerGauge).deposit(bpspBalance);
+  }
+
+  function joinDAIPool(uint256 _amount) public onlyAllowed {
+    joinDAIPoolInternal(_amount);
+  }
+
   // for dev purposes only retain or remove
   function withdrawERC20(address _token, uint256 _amount) public onlyAllowed
   {
