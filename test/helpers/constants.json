@@ -1,0 +1,9 @@
+{
+  "deployer_address": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+  "depositFee": 0,
+  "withdrawalFee": 0,
+  "performanceFee": 0,
+  "poolId": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012",
+  "BPSP": "0x06Df3b2bbB68adc8B0e302443692037ED9f91b42",
+  "account1": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+}
