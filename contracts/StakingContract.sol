@@ -198,6 +198,32 @@ contract StakingContract is
     joinDAIPoolInternal(_amount);
   }
 
+  function leaveDAIPoolExactAmountInternal(uint256 _amount) internal {
+    BalancerGauge(balancerInfo.balancerGauge).withdraw(_amount);
+
+    uint256[] memory amountsOut = new uint256[](4);
+    amountsOut[1] = _amount;
+
+    bytes memory userDataEncoded = abi.encode(2, amountsOut, IERC20Upgradeable(balancerInfo.BPSP).balanceOf(address(this)));
+
+    ExitPoolRequest memory request;
+    request.assets = balancerInfo.assets;
+    request.minAmountsOut = amountsOut;
+    request.userData = userDataEncoded;
+    request.toInternalBalance = false;
+
+    // exit exact amount
+    Balancer(BALANCER).exitPool(balancerInfo.poolId, address(this), payable(address(this)), request);
+
+    // redeposit to gauge if withdraw amount < bpspBalance
+    uint256 bpspBalance = IERC20Upgradeable(balancerInfo.BPSP).balanceOf(address(this));
+    BalancerGauge(balancerInfo.balancerGauge).deposit(bpspBalance);
+  }
+
+  function leaveDAIPool(uint256 _amount) public onlyAllowed {
+    leaveDAIPoolExactAmountInternal(_amount);
+  }
+
   // for dev purposes only retain or remove
   function withdrawERC20(address _token, uint256 _amount) public onlyAllowed
   {

@@ -170,4 +170,96 @@ describe("StakingContract", function() {
     //  console.log("BPSP Gauge Balance After:", accountToFundInitialBPSPBalanceAfter / 1e18);
      expect(accountToFundInitialBPSPBalanceAfter).not.equal(0)
   });
+
+  it("Should leave balancer pool", async function() {
+    await contract.deployed();
+    
+    /**
+    * JOIN POOL
+    */
+    const whaleAccountToImpersonate = c.whaleAccountToImpersonate;
+    const accountToFund = contract.address;
+
+    /***
+    * @note 18 decimals, 1 DAI = 1000000000000000000
+    * This case lets transfer 300,000 DAI
+    */
+    const amountToTransfer = BigInt(300000000000000000000000);
+
+    
+    // Request hardhat to impersonate account
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [whaleAccountToImpersonate],
+    });
+    const signer = await ethers.getSigner(whaleAccountToImpersonate);
+
+    // load the contracts 
+    const DAI_CONTRACT = new ethers.Contract(contracts.DAI.address, contracts.DAI.abi, signer);
+    const BALANCER_GAUGE_CONTRACT = new ethers.Contract(contracts.BALANCER_GAUGE.address, contracts.BALANCER_GAUGE.abi, signer);
+
+
+    const whaleAccountToImpersonateBalance = await DAI_CONTRACT.balanceOf(whaleAccountToImpersonate);
+    // console.log("DAI whale balancer: ", whaleAccountToImpersonateBalance / 1e18);
+
+    // Send amountToTransfer from whaleAccountToImpersonate to accountToFund
+    await DAI_CONTRACT.connect(signer).transfer(accountToFund, amountToTransfer);
+    let accountToFundBalance = await DAI_CONTRACT.balanceOf(accountToFund);
+    // console.log("Im a new whale: ", accountToFundBalance / 1e18);
+
+    expect(accountToFundBalance).to.equal(amountToTransfer);
+
+    /**
+    * Get intiial BPSP balance of accountToFund BEFORE joining the pool
+    * We expect that the initial BPSP Balance of accountToFund BEFORE joining the pool is 0
+    */
+    const accountToFundInitialBPSPBalanceBefore = await BALANCER_GAUGE_CONTRACT.balanceOf(accountToFund);
+    // console.log("BPSP Gauge Balance Before:", accountToFundInitialBPSPBalanceBefore / 1e18);
+    expect(accountToFundInitialBPSPBalanceBefore).to.equal(0);
+
+    // join DAI pool
+    const r = await contract.joinDAIPool(accountToFundBalance);
+    await r.wait();
+
+    /**
+    * Get intiial BPSP balance of accountToFund AFTER joining the pool
+    * We expect that the initial BPSP Balance of accountToFund AFTER joining the pool is not 0
+    */
+    const accountToFundInitialBPSPBalanceAfter = await BALANCER_GAUGE_CONTRACT.balanceOf(accountToFund)
+    //  console.log("BPSP Gauge Balance After:", accountToFundInitialBPSPBalanceAfter / 1e18);
+    expect(accountToFundInitialBPSPBalanceAfter).not.equal(0)
+
+
+    /**
+     * LEAVE POOL
+     */
+    /***
+    * @note 18 decimals, 1 DAI = 1000000000000000000
+    * This case lets withdraw 100,000 DAI
+    */
+    const amountToWithdraw = BigInt(100000000000000000000000);
+    
+    // get the contract BPSP balance BEFORE the withdrawal
+    let contractBPSPBalanceFundBefore = await BALANCER_GAUGE_CONTRACT.balanceOf(contract.address);
+    // console.log("Contract BPSP balance AFTER the withdrawal: ", contractBPSPBalanceFundBefore / 1e18);
+    // get the contract DAI balance BEFORE the withdrawal
+    let contractDAIBalanceFundBefore = await DAI_CONTRACT.balanceOf(contract.address);
+    // console.log("Contract DAI balance BEFORE the withdrawal: ", contractDAIBalanceFundBefore / 1e18);
+
+    // leave DAI pool
+    const rr = await contract.leaveDAIPool(amountToWithdraw)
+    await r.wait();
+
+    // get the contract BPSP balance AFTER the withdrawal 
+    const contractBPSPBalanceFundAfter = await BALANCER_GAUGE_CONTRACT.balanceOf(contract.address);
+    // console.log("Contract BPSP balance AFTER the withdrawal", contractBPSPBalanceFundAfter / 1e18);
+    // get the contract DAI balance AFTER the withdrawal
+    let contractDAIBalanceFundAfter = await DAI_CONTRACT.balanceOf(contract.address);
+    // console.log("Contract DAI balance AFTER the withdrawal: ", contractDAIBalanceFundAfter / 1e18);
+
+    // this could improve with slippage in factor to get the exact expected result
+    expect(contractDAIBalanceFundBefore).to.equal(0);
+    expect(contractDAIBalanceFundAfter).to.not.equal(0);
+    
+  });
 });
