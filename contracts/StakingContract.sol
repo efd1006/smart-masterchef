@@ -215,7 +215,7 @@ contract StakingContract is
     // exit exact amount
     Balancer(BALANCER).exitPool(balancerInfo.poolId, address(this), payable(address(this)), request);
 
-    // redeposit to gauge if withdraw amount < bpspBalance
+    // redeposit to gauge if there are BPSP left
     uint256 bpspBalance = IERC20Upgradeable(balancerInfo.BPSP).balanceOf(address(this));
     BalancerGauge(balancerInfo.balancerGauge).deposit(bpspBalance);
   }
