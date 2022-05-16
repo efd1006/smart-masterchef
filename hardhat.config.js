@@ -16,6 +16,23 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+ module.exports = {
   solidity: "0.8.4",
+  networks: {
+    hardhat: {
+      forking: {
+        url: process.env.POLYGON_RPC,
+        blockNumber: 28367911
+      }
+    },
+    polygonmainnet: {
+      url: process.env.POLYGON_RPC,
+      accounts: [`${process.env.DEPLOYER_PRIVATEKEY}`]
+    }
+  },
+  etherscan: {
+    apiKey: {
+      polygon: `${process.env.POLYGONSCAN_APIKEY}`
+    }
+  }
 };
