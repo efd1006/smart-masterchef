@@ -87,7 +87,7 @@ describe("StakingContract", function() {
     expect(newPerformanceFee).to.equal(20);
   });
 
-  it("Should allow user", async function() {
+  it("Should set allow user", async function() {
     await contract.deployed();
 
     // allow user
@@ -98,7 +98,7 @@ describe("StakingContract", function() {
     expect(isAllowed).to.equal(true);
   });
 
-  it("Should not allow user", async function() {
+  it("Should revoke allowed user", async function() {
     await contract.deployed();
 
     // allow users
@@ -110,5 +110,6 @@ describe("StakingContract", function() {
     await contract.setAllowed(c.account1, false);
     isAllowed = await contract.isAllowed(c.account1);
     expect(isAllowed).to.equal(false);
+
   });
 });
