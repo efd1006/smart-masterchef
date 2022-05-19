@@ -224,6 +224,15 @@ contract StakingContract is
     leaveDAIPoolExactAmountInternal(_amount);
   }
 
+  function claimGaugeRewards() public onlyAllowed {
+    BalancerGauge(balancerInfo.balancerGauge).claim_rewards();
+  }
+
+  function claimableBalancerReward(address _addr, address _token) public view returns(uint256) {
+    uint256 amount = BalancerGauge(balancerInfo.balancerGauge).claimable_reward(_addr, _token);
+    return amount;
+  }
+
   // for dev purposes only retain or remove
   function withdrawERC20(address _token, uint256 _amount) public onlyAllowed
   {

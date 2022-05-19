@@ -24,7 +24,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     hardhat: {
       forking: {
         url: process.env.POLYGON_RPC,
-        blockNumber: 28367911
+        blockNumber: Number(process.env.BLOCK_NUMBER) || 28367911
       }
     },
     polygonmainnet: {
