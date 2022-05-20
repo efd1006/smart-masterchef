@@ -30,11 +30,16 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     polygonmainnet: {
       url: process.env.POLYGON_RPC,
       accounts: [`${process.env.DEPLOYER_PRIVATEKEY}`]
+    },
+    polygon_testnet: {
+      url: process.env.POLYGON_TESTNET_RPC,
+      accounts: [`${process.env.DEPLOYER_PRIVATEKEY}`]
     }
   },
   etherscan: {
     apiKey: {
-      polygon: `${process.env.POLYGONSCAN_APIKEY}`
+      polygon: `${process.env.POLYGONSCAN_APIKEY}`,
+      polygonMumbai: `${process.env.POLYGONSCAN_APIKEY}`
     }
   }
 };

@@ -7,3 +7,6 @@ typechain
 #Hardhat files
 cache
 artifacts
+
+#Deployement contants
+scripts/constants/constants.json
