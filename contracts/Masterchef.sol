@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Ganap.sol";
 
-import 'hardhat/console.sol';
-
 contract MasterChef is Ownable, ReentrancyGuard {
 	using SafeERC20 for IERC20;
 
