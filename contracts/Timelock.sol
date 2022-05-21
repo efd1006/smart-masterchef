@@ -38,7 +38,7 @@ contract Timelock {
 	}
 
 	function setDelay(uint256 _delay) public {
-		require(msg.sender == admin, "Timelock::setDelay: Call must come from Timelock.");
+		require(msg.sender == address(this), "Timelock::setDelay: Call must come from Timelock.");
 		require(_delay >= MINIMUM_DELAY, "Timelock::setDelay: Delay must exceed minimum delay.");
 		require(_delay <= MAXIMUM_DELAY, "Timelock::setDelay: Delay must not exceed maximum delay.");
 		delay = _delay;
