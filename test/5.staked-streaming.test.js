@@ -6,10 +6,12 @@ const routerJson = require("@uniswap/v2-periphery/build/UniswapV2Router02.json")
 
 
 describe("Staking GANAP-USDC LP tokens to get rewards", () => {
-    let ganap, masterchef, owner, developer, treasury, user1, user2, rewardManager, deadline, usdc, uniswapPair;
+
+    let ganap, masterchef, owner, developer, treasury, user1, user2, rewardManager, deadline, usdc, uniswapPair, multisig;
     const initialSupply = ethers.utils.parseEther('100000')
+
     before(async () => {
-        [owner, developer, user1, user2, treasury] = await ethers.getSigners();
+        [owner, developer, user1, user2, treasury, multisig] = await ethers.getSigners();
         deadline = (await ethers.provider.getBlock('latest')).timestamp * 2; // uniswap dealine params
 
         // Ganap token
@@ -31,7 +33,7 @@ describe("Staking GANAP-USDC LP tokens to get rewards", () => {
 
         // Deploy RewardManager contract
         const RewardManager = await ethers.getContractFactory("RewardManager")
-        rewardManager = await RewardManager.deploy()
+        rewardManager = await RewardManager.deploy(masterchef.address, multisig.address)
         await rewardManager.deployed()
 
         // Setup Factory
@@ -114,7 +116,7 @@ describe("Staking GANAP-USDC LP tokens to get rewards", () => {
 
         // get user1 pending reward before deposit
         let user1PendingRewardBefore = await masterchef.pendingReward(0, user1.address)
-        expect(user1PendingRewardBefore).to.eq(0) 
+        expect(user1PendingRewardBefore).to.eq(0)
 
         // approve lp token  and deposit LP to masterchef
         await uniswapPair.connect(user1).approve(masterchef.address, user1LPBalance)
@@ -148,7 +150,7 @@ describe("Staking GANAP-USDC LP tokens to get rewards", () => {
         let user1LPBalanceBefore = user1Info[0]
         // console.log("User1 LP Balance on the pool before withdrawal: ", user1LPBalanceBefore)
         expect(user1LPBalanceBefore).to.gt(0)
-        
+
         // withdraw from the pool
         await masterchef.connect(user1).withdraw(0, user1LPBalanceBefore)
 
