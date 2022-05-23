@@ -22,7 +22,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		//   pending reward = (user.amount * pool.ganapPerShare) - user.rewardDebt
 		//
 		// Whenever a user deposits or withdraws LP tokens to a pool. Here's what happens:
-		//   1. The pool's `ganapPerShare` (and `lastRewardBlock`) gets updated.
+		//   1. The pool's `ganapPerShare` (and `lastRewardTime`) gets updated.
 		//   2. User receives the pending reward sent to his/her address.
 		//   3. User's `amount` gets updated.
 		//   4. User's `rewardDebt` gets updated.
@@ -32,7 +32,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	struct PoolInfo {
 		IERC20 lpToken; // Address of LP token contract.
 		uint256 allocPoint; // How many allocation points assigned to this pool. Ganap to distribute per block.
-		uint256 lastRewardBlock; // Last block number that ganap distribution occurs.
+		uint256 lastRewardTime; // Last block timestamp that ganap distribution occurs.
 		uint256 accGanapPerShare; // Accumulated ganap per share, times 1e12. See below.
 		uint16 depositFeeBP; // Deposit fee in basis points
 	}
@@ -124,10 +124,10 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		if (_withUpdate) {
 			massUpdatePools();
 		}
-		uint256 lastRewardBlock = block.timestamp > startTime ? block.timestamp : startTime;
+		uint256 lastRewardTime = block.timestamp > startTime ? block.timestamp : startTime;
 		totalAllocPoint = totalAllocPoint.add(_allocPoint);
 		poolExistence[_lpToken] = true;
-		poolInfo.push(PoolInfo({ lpToken: _lpToken, allocPoint: _allocPoint, lastRewardBlock: lastRewardBlock, accGanapPerShare: 0, depositFeeBP: _depositFeeBP }));
+		poolInfo.push(PoolInfo({ lpToken: _lpToken, allocPoint: _allocPoint, lastRewardTime: lastRewardTime, accGanapPerShare: 0, depositFeeBP: _depositFeeBP }));
 	}
 
 	// Update the given pool's Ganap allocation point and deposit fee. Can only be called by the owner.
@@ -166,8 +166,8 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		UserInfo storage user = userInfo[_pid][_user];
 		uint256 accGanapPerShare = pool.accGanapPerShare;
 		uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-		if (block.timestamp > pool.lastRewardBlock && lpSupply != 0) {
-			uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.timestamp);
+		if (block.timestamp > pool.lastRewardTime && lpSupply != 0) {
+			uint256 multiplier = getMultiplier(pool.lastRewardTime, block.timestamp);
 			uint256 ganapReward = multiplier.mul(ganapPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
 			accGanapPerShare = accGanapPerShare.add(ganapReward.mul(1e12).div(lpSupply));
 		}
@@ -195,19 +195,18 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	// Update reward variables of the given pool to be up-to-date.
 	function updatePool(uint256 _pid) public {
 		PoolInfo storage pool = poolInfo[_pid];
-		if (block.timestamp <= pool.lastRewardBlock) {
+		if (block.timestamp <= pool.lastRewardTime) {
 			return;
 		}
 		uint256 lpSupply = pool.lpToken.balanceOf(address(this));
 		if (lpSupply == 0) {
-			pool.lastRewardBlock = block.timestamp;
+			pool.lastRewardTime = block.timestamp;
 			return;
 		}
-		uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.timestamp);
+		uint256 multiplier = getMultiplier(pool.lastRewardTime, block.timestamp);
 		uint256 ganapReward = multiplier.mul(ganapPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
-		pool.accGanapPerShare += ((ganapReward * 1e12) / lpSupply);
 		pool.accGanapPerShare = pool.accGanapPerShare.add(ganapReward.mul(1e12).div(lpSupply));
-		pool.lastRewardBlock = block.timestamp;
+		pool.lastRewardTime = block.timestamp;
 	}
 
 	// Deposit LP tokens to MasterChef for Ganap allocation.
