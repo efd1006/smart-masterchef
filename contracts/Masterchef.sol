@@ -324,7 +324,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 
 	// Safe Ganap transfer function, reverts if staking reward doesn't have enough funds
 	function safeGanapTransfer(address _to, uint256 _amount) internal {
-		uint256 ganapBal = ganap.balanceOf(address(this));
+		uint256 ganapBal = ganap.balanceOf(address(rewardManager));
 		uint256 ganapAllowance = ganap.allowance(rewardManager, address(this));
 		require(ganapBal >= _amount, "Insufficient funds.");
 		require(ganapAllowance >= _amount, "Insufficient approval");
