@@ -20,9 +20,10 @@ describe("Timelock", () => {
         await ganap.deployed();
 
         // Deploy Masterchef
-        const startBlock = await ethers.provider.getBlockNumber();
+        const startTime = 1653242824;
+        const endTime = 1684749150;
         const MasterChef = await ethers.getContractFactory("MasterChef");
-        masterchef = await MasterChef.deploy(ganap.address, developer.address, treasury.address, ethers.utils.parseEther('1'), startBlock);
+        masterchef = await MasterChef.deploy(ganap.address, developer.address, treasury.address, ethers.utils.parseEther('0.05'), startTime, endTime, "0x0000000000000000000000000000000000000000");
         await masterchef.deployed();
 
         // deploy timelock
@@ -122,14 +123,6 @@ describe("Timelock", () => {
         expect(tx.hash).to.not.null
         expect(tx.hash).to.not.undefined
         expect(tx.hash).to.not.empty
-    })
-
-    it("Should set delay", async () => {
-        await expect(timelock.connect(admin).setDelay(3200)).to.revertedWith("Timelock::setDelay: Delay must exceed minimum delay.")
-        await timelock.connect(admin).setDelay(10800) // set delay to 3 hours
-        const newDelay = await timelock.delay()
-        expect(newDelay).to.eq(10800)     
-
     })
 
 });
