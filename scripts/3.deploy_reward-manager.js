@@ -3,7 +3,6 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const { ethers } = require("hardhat");
 const hre = require("hardhat");
 const c = require('./constants/constants.json');
 
@@ -15,20 +14,15 @@ async function main() {
     // manually to make sure everything is compiled
     // await hre.run('compile');
 
-    const ganapTokenAddress = c.ganapTokenAddress
-    const devAddress = c.devAddress
-    const treasuryAddress = c.treasuryAddress
-    const ganapPerBlock = ethers.utils.parseEther(`${c.ganapPerBlock}`)
-    const startTime = c.startTime
-    const endTime = c.endTime
-    const rewardManagerAddress = c.rewardManagerAddress
+    const masterchefAddress = c.masterchefAddress
+    const multisigAddress = c.multisigAddress
 
     // We get the contract to deploy
-    const MasterChef = await hre.ethers.getContractFactory("MasterChef");
-    const masterchef = await MasterChef.deploy(ganapTokenAddress, devAddress, treasuryAddress, ganapPerBlock, startTime, endTime, rewardManagerAddress);
+    const RewardManager = await hre.ethers.getContractFactory("RewardManager");
+    const rewardManager = await RewardManager.deploy(masterchefAddress, multisigAddress);
 
-    await masterchef.deployed();
-    console.log("Masterchef Contract deployed to:", masterchef.address);
+    await rewardManager.deployed();
+    console.log("RewardManager Contract deployed to:", rewardManager.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

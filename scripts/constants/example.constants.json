@@ -2,6 +2,11 @@
     "initialTokenSupply": null,
     "ganapTokenAddress": "",
     "devAddress": "",
+    "treasuryAddress": "",
     "ganapPerBlock": null,
-    "startBlock": null
+    "startTime": null,
+    "endTime": null,
+    "rewardManagerAddress": null,
+    "masterchefAddress": "",
+    "multisigAddress": ""
 }
