@@ -7,10 +7,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract RewardManager is Ownable {
 	address public operator;
 	address public masterchef;
+	address public multisig;
+
 	uint256 constant MAX_INT = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
-	constructor() {
+	constructor(address _masterchef, address _multisig) {
 		operator = msg.sender;
+		masterchef = _masterchef;
+		multisig = _multisig;
 	}
 
 	modifier onlyOperator() {
@@ -20,6 +24,11 @@ contract RewardManager is Ownable {
 
 	modifier onlyAllowed() {
 		require(msg.sender == owner() || msg.sender == operator, "onlyAllowed: not allowed");
+		_;
+	}
+
+	modifier onlyMultisig() {
+		require(msg.sender == multisig, "onlyMultisig: not allowed");
 		_;
 	}
 
@@ -40,11 +49,14 @@ contract RewardManager is Ownable {
 		IERC20(_token).approve(masterchef, MAX_INT);
 	}
 
+	function setMultisig(address _newMultisig) public onlyAllowed {
+		multisig = _newMultisig;
+	}
+
 	function withdrawERC20(
 		address _token,
-		address _to,
 		uint256 _amount
-	) public onlyAllowed {
-		IERC20(_token).transfer(_to, _amount);
+	) public onlyMultisig {
+		IERC20(_token).transfer(multisig, _amount);
 	}
 }
