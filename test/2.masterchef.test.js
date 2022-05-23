@@ -8,13 +8,13 @@ const mineBlocks = async (n) => {
 }
 
 describe("MasterChef", () => {
-    let ganap, masterchef, owner, developer, treasury, user1, user2, stakingReward;
+    let ganap, masterchef, owner, developer, treasury, user1, user2, rewardManager;
     const baseDepositFee = 400 // 4%
     const amountToTransfer = 20
     const amountToDeposit = 10
 
     before(async () => {
-        [owner, developer, treasury, user1, user2, stakingReward] = await ethers.getSigners();
+        [owner, developer, treasury, user1, user2, rewardManager] = await ethers.getSigners();
         const Ganap = await ethers.getContractFactory("Ganap");
         ganap = await Ganap.deploy(ethers.utils.parseEther('100'));
         await ganap.deployed();
@@ -28,18 +28,18 @@ describe("MasterChef", () => {
 
     it("Need to transfer ownership of token to masterchef contract", async () => {
         // send some ganap token on staking reward before transfering owenrship 
-        await ganap.transfer(stakingReward.address, ethers.utils.parseEther(`10`));
+        await ganap.transfer(rewardManager.address, ethers.utils.parseEther(`10`));
 
-        await ganap.connect(stakingReward).approve(masterchef.address, ethers.constants.MaxInt256) // approve to spend ganap token on staking reward
+        await ganap.connect(rewardManager).approve(masterchef.address, ethers.constants.MaxInt256) // approve to spend ganap token on staking reward
 
         await ganap.transferOwnership(masterchef.address); // Important Ensure The MasterChef is Token Owner
     });
 
     it("Should set staking reward address", async () => {
         // revert if not owner of the masterchef
-        await expect(masterchef.connect(user1).setStakingRewardAddress(stakingReward.address)).to.be.revertedWith("Ownable: caller is not the owner")
+        await expect(masterchef.connect(user1).setRewardManager(rewardManager.address)).to.be.revertedWith("Ownable: caller is not the owner")
 
-        await masterchef.setStakingRewardAddress(stakingReward.address);
+        await masterchef.setRewardManager(rewardManager.address);
     })
 
     it("Should add a staking pool", async () => {

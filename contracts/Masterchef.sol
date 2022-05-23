@@ -66,7 +66,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	uint256 public endTime;
 
 	// STAKING REWARD CONTRACT THAT HOLDS THE REWARD
-	address public stakingRewardAddress;
+	address public rewardManager;
 
 	/*****************
         MODIFIERS
@@ -92,7 +92,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		uint256 _ganapPerSecond,
 		uint256 _startTime,
 		uint256 _endTime,
-		address _stakingRewardAddress
+		address _rewardManager
 	) {
 		ganap = _ganap;
 		devAddress = _devAddress;
@@ -101,11 +101,11 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		ganapPerSecond = _ganapPerSecond;
 		startTime = _startTime;
 		endTime = _endTime;
-		stakingRewardAddress = _stakingRewardAddress;
+		rewardManager = _rewardManager;
 	}
 
-	function setStakingRewardAddress(address _stakingRewardAddress) external onlyOwner {
-		stakingRewardAddress = _stakingRewardAddress;
+	function setRewardManager(address _rewardManager) external onlyOwner {
+		rewardManager = _rewardManager;
 	}
 
 	function poolLength() external view returns (uint256) {
@@ -205,8 +205,6 @@ contract MasterChef is Ownable, ReentrancyGuard {
 		}
 		uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.timestamp);
 		uint256 ganapReward = multiplier.mul(ganapPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
-		// ganap.mint(devAddress, ganapReward / 10);
-		// ganap.mint(address(this), ganapReward);
 		pool.accGanapPerShare += ((ganapReward * 1e12) / lpSupply);
 		pool.accGanapPerShare = pool.accGanapPerShare.add(ganapReward.mul(1e12).div(lpSupply));
 		pool.lastRewardBlock = block.timestamp;
@@ -283,7 +281,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 				user.rewardDebt = calc;
 
 				if (pending > 0) {
-					totalPending += pending;
+					totalPending = totalPending.add(pending);
 				}
 			}
 		}
@@ -327,10 +325,10 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	// Safe Ganap transfer function, reverts if staking reward doesn't have enough funds
 	function safeGanapTransfer(address _to, uint256 _amount) internal {
 		uint256 ganapBal = ganap.balanceOf(address(this));
-		uint256 ganapAllowance = ganap.allowance(stakingRewardAddress, address(this));
+		uint256 ganapAllowance = ganap.allowance(rewardManager, address(this));
 		require(ganapBal >= _amount, "Insufficient funds.");
 		require(ganapAllowance >= _amount, "Insufficient approval");
-		ganap.transferFrom(stakingRewardAddress, address(this), _amount);
+		ganap.transferFrom(rewardManager, address(this), _amount);
 		ganap.transfer(_to, _amount);
 	}
 
