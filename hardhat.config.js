@@ -27,14 +27,19 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
         blockNumber: Number(process.env.BLOCK_NUMBER) || 28367911
       }
     },
-    polygonmainnet: {
+    "polygon-mainnet": {
       url: process.env.POLYGON_RPC,
+      accounts: [`${process.env.DEPLOYER_PRIVATEKEY}`]
+    },
+    "polygon-testnet": {
+      url: process.env.POLYGON_TESTNET_RPC,
       accounts: [`${process.env.DEPLOYER_PRIVATEKEY}`]
     }
   },
   etherscan: {
     apiKey: {
-      polygon: `${process.env.POLYGONSCAN_APIKEY}`
+      polygon: `${process.env.POLYGONSCAN_APIKEY}`,
+      polygonMumbai: `${process.env.POLYGONSCAN_APIKEY}`
     }
   }
 };
