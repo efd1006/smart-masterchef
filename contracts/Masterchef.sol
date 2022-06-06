@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Ganap.sol";
 
-contract MasterChef is Ownable, ReentrancyGuard {
+contract Masterchef is Ownable, ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -210,7 +210,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	}
 
 	// Deposit LP tokens to MasterChef for Ganap allocation.
-	function deposit(uint256 _pid, uint256 _amount) public nonReentrant {
+	function deposit(uint256 _pid, uint256 _amount) public virtual nonReentrant {
 		PoolInfo storage pool = poolInfo[_pid];
 		UserInfo storage user = userInfo[_pid][_msgSender()];
 		updatePool(_pid);
@@ -238,7 +238,7 @@ contract MasterChef is Ownable, ReentrancyGuard {
 	}
 
 	// Withdraw LP tokens from MasterChef.
-	function withdraw(uint256 _pid, uint256 _amount) public nonReentrant {
+	function withdraw(uint256 _pid, uint256 _amount) public virtual nonReentrant {
 		PoolInfo storage pool = poolInfo[_pid];
 		UserInfo storage user = userInfo[_pid][_msgSender()];
 

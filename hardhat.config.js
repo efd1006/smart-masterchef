@@ -42,5 +42,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
       polygon: `${process.env.POLYGONSCAN_APIKEY}`,
       polygonMumbai: `${process.env.POLYGONSCAN_APIKEY}`
     }
-  }
+  },
+  mocha: {
+    timeout: 400000
+  },
 };

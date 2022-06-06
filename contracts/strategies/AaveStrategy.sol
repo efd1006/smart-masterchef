@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract AaveStrategy is Initializable {
-	IERC20 public usdcToken;
-	IERC20 public aUsdcToken;
 
 	ILendingPoolAddressesProvider public aaveProvider;
 
@@ -39,7 +37,7 @@ contract AaveStrategy is Initializable {
 		require(msg.sender == operator || msg.sender == admin);
 		_;
 	}
-
+	
 	// --- Setters
 
 	function setAdmin(address _newAdmin) public onlyAdmin {
@@ -50,63 +48,55 @@ contract AaveStrategy is Initializable {
 		operator = _newOperator;
 	}
 
+
 	function setVault (address _newVault) public onlyAdmin {
 		vault = _newVault;
 	}
 
 	// logic
 
-	function setTokens(address _usdcToken, address _aUsdcToken) external onlyAdmin {
-		require(_usdcToken != address(0), "Zero address not allowed");
-		require(_aUsdcToken != address(0), "Zero address not allowed");
-		usdcToken = IERC20(_usdcToken);
-		aUsdcToken = IERC20(_aUsdcToken);
-	}
-
 	function setAaveProvider(address _aaveProvider) external onlyAdmin {
 		require(_aaveProvider != address(0), "Zero address not allowed");
 		aaveProvider = ILendingPoolAddressesProvider(_aaveProvider);
 	}
 
-	function stake(address _asset, uint256 _amount) public onlyOperatorOrAdmin {
-		require(_asset == address(usdcToken), "token not compatible");
+	function stake(address _token, uint256 _amount) public onlyOperatorOrAdmin {
 
-        IERC20(_asset).transferFrom(vault, address(this), _amount);
+        IERC20(_token).transferFrom(vault, address(this), _amount);
 
 		ILendingPool pool = ILendingPool(aaveProvider.getLendingPool());
-		usdcToken.approve(address(pool), _amount);
+		IERC20(_token).approve(address(pool), _amount);
 
-		pool.deposit(address(usdcToken), _amount, address(this), 0);
+		pool.deposit(address(_token), _amount, address(this), 0);
 	}
 
 	function unstake(
-		address _asset,
+		address _token,
+		address _aToken,
 		uint256 _amount
 	) public onlyOperatorOrAdmin {
-		require(_asset == address(usdcToken), "token not compatible");
 
 		ILendingPool pool = ILendingPool(aaveProvider.getLendingPool());
-		aUsdcToken.approve(address(pool), _amount);
+		IERC20(_aToken).approve(address(pool), _amount);
 
-		pool.withdraw(_asset, _amount, vault);
+		pool.withdraw(_token, _amount, vault);
 	}
 
-	function unstakeFull(address _asset) public onlyOperatorOrAdmin {
-		require(_asset == address(usdcToken), "token not compatible");
+	function unstakeFull(address _token, address _aToken) public onlyOperatorOrAdmin {
 
-		uint256 _amount = aUsdcToken.balanceOf(address(this));
+		uint256 _amount = IERC20(_aToken).balanceOf(address(this));
 
 		ILendingPool pool = ILendingPool(aaveProvider.getLendingPool());
-		aUsdcToken.approve(address(pool), _amount);
+		IERC20(_aToken).approve(address(pool), _amount);
 
-		pool.withdraw(_asset, _amount, vault);
+		pool.withdraw(_token, _amount, vault);
 	}
 
-	function netAssetValue() external view returns (uint256) {
-		return aUsdcToken.balanceOf(address(this));
+	function netAssetValue(address _aToken) external view returns (uint256) {
+		return IERC20(_aToken).balanceOf(address(this));
 	}
 
-	function liquidationValue() external view returns (uint256) {
-		return aUsdcToken.balanceOf(address(this));
+	function liquidationValue(address _aToken) external view returns (uint256) {
+		return IERC20(_aToken).balanceOf(address(this));
 	}
 }
